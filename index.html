@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CIS Russian Oral Practice</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;padding:18px;
+ background:#f0f4fa;
+ font-family:Arial,sans-serif;
+ color:#172b4d
+}
+main{max-width:550px;margin:20px auto}
+header{text-align:center;margin-bottom:24px}
+h1{font-size:25px;margin:10px 0}
+.subtitle{color:#64748b;font-size:14px}
+.card{
+ background:white;border-radius:20px;
+ padding:24px 20px;
+ box-shadow:0 5px 24px #17325a12;
+ text-align:center
+}
+#progress{color:#64748b;font-size:14px}
+#question{
+ font-size:26px;font-weight:bold;
+ margin:30px 0;line-height:1.5
+}
+button{
+ border:0;border-radius:12px;
+ padding:15px 12px;
+ font-size:15px;font-weight:600;
+ min-height:50px;cursor:pointer;
+ touch-action:manipulation
+}
+.primary{background:#1456c0;color:white}
+.secondary{background:#e8effa;color:#173a71}
+.green{background:#d9f4e6;color:#176448}
+.buttons{display:grid;gap:10px;margin:14px 0}
+.two{grid-template-columns:1fr 1fr}
+.info{
+ background:#f5f8ff;border-radius:12px;
+ padding:16px;margin-top:14px;
+ text-align:left;line-height:1.6
+}
+[hidden]{display:none!important}
+#status{font-size:13px;color:#64748b;min-height:20px}
+footer{text-align:center;font-size:12px;color:#64748b;margin:24px}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>CIS Russian Oral Practice</h1>
+<div class="subtitle">
+Russian as a Third Language | Beginner A1
+</div>
+<p>Listen to the question and answer aloud in Russian.</p>
+</header>
+
+<div class="buttons two">
+<button class="secondary" onclick="start(false)">
+All 20 Questions
+</button>
+<button class="green" onclick="start(true)">
+Random 10 Questions
+</button>
+</div>
+
+<section class="card">
+<div id="progress"></div>
+<div id="question">Tap Listen to begin</div>
+
+<div class="buttons">
+<button class="primary" onclick="speak(0.9)">
+&#9654; Listen in Russian
+</button>
+<button class="secondary" onclick="speak(0.65)">
+Repeat Slowly
+</button>
+<button class="secondary" onclick="toggle('rus')">
+Show / Hide Russian Text
+</button>
+</div>
+
+<div id="rus" class="info" hidden></div>
+
+<div class="buttons two">
+<button class="secondary" onclick="toggle('english')">
+English Meaning
+</button>
+<button class="green" onclick="toggle('sample')">
+Sample Answer
+</button>
+</div>
+
+<div id="english" class="info" hidden></div>
+<div id="sample" class="info" hidden></div>
+
+<p id="status" aria-live="polite"></p>
+
+<div class="buttons two">
+<button class="secondary" onclick="move(-1)">
+Previous
+</button>
+<button class="primary" onclick="move(1)">
+Next Question
+</button>
+</div>
+</section>
+
+<footer>
+Contofield International School
+<br>Russian Listening & Speaking Practice
+</footer>
+</main>
+
+<script>
+const bank = [
+["Как тебя зовут?",
+"What is your name?","Меня зовут Анна."],
+
+["Сколько тебе лет?",
+"How old are you?","Мне десять лет."],
+
+["Откуда ты?",
+"Where are you from?","Я из Пакистана."],
+
+["В каком классе ты учишься?",
+"Which grade are you in?",
+"Я учусь в пятом классе."],
+
+["Как называется твоя школа?",
+"What is your school's name?",
+"Моя школа называется Контофилд."],
+
+["Какой твой любимый цвет?",
+"What is your favourite colour?",
+"Мой любимый цвет — синий."],
+
+["Сколько человек в твоей семье?",
+"How many people are in your family?",
+"В моей семье четыре человека."],
+
+["У тебя есть братья или сёстры?",
+"Do you have brothers or sisters?",
+"Да, у меня есть сестра."],
+
+["Какой сегодня день недели?",
+"What day of the week is it today?",
+"Сегодня среда."],
+
+["Какой сейчас месяц?",
+"What month is it now?",
+"Сейчас ноябрь."],
+
+["Какое сейчас время года?",
+"What season is it now?",
+"Сейчас осень."],
+
+["Какая сегодня погода?",
+"What is the weather like today?",
+"Сегодня солнечно."],
+
+["Какой твой любимый предмет в школе?",
+"What is your favourite school subject?",
+"Мой любимый предмет — математика."],
+
+["Что ты любишь есть?",
+"What do you like to eat?",
+"Я люблю есть пиццу."],
+
+["Какой твой любимый фрукт?",
+"What is your favourite fruit?",
+"Мой любимый фрукт — яблоко."],
+
+["Какое твоё любимое животное?",
+"What is your favourite animal?",
+"Моё любимое животное — кошка."],
+
+["Что ты любишь делать в свободное время?",
+"What do you like to do in your free time?",
+"Я люблю читать книги."],
+
+["Во сколько ты просыпаешься утром?",
+"What time do you wake up in the morning?",
+"Я просыпаюсь в семь часов."],
+
+["Что ты обычно делаешь после школы?",
+"What do you usually do after school?",
+"После школы я делаю домашнее задание."],
+
+["Почему ты изучаешь русский язык?",
+"Why are you learning Russian?",
+"Я хочу говорить по-русски."]
+];
+
+let order = [];
+let index = 0;
+
+function start(random) {
+ if ("speechSynthesis" in window)
+   speechSynthesis.cancel();
+
+ order = bank.map((_,i)=>i);
+
+ if(random){
+   for(let i=order.length-1;i>0;i--){
+     const j=Math.floor(Math.random()*(i+1));
+     [order[i],order[j]]=[order[j],order[i]];
+   }
+   order=order.slice(0,10);
+ }
+ index=0;
+ render();
+}
+
+function render(){
+ const item=bank[order[index]];
+
+ document.getElementById("progress").textContent =
+ `Question ${index+1} of ${order.length}`;
+
+ document.getElementById("question").textContent =
+ "Listen and answer aloud";
+
+ document.getElementById("rus").textContent=item[0];
+ document.getElementById("english").textContent=item[1];
+ document.getElementById("sample").textContent =
+ "Example: "+item[2];
+
+ ["rus","english","sample"].forEach(id=>{
+   document.getElementById(id).hidden=true;
+ });
+
+ document.getElementById("status").textContent="";
+}
+
+function toggle(id){
+ const el=document.getElementById(id);
+ el.hidden=!el.hidden;
+}
+
+function move(step){
+ if("speechSynthesis" in window)
+   speechSynthesis.cancel();
+
+ index=(index+step+order.length)%order.length;
+ render();
+}
+
+function speak(rate){
+ const status=document.getElementById("status");
+
+ if(!("speechSynthesis" in window)){
+   status.textContent="Speech is unavailable in this browser.";
+   return;
+ }
+
+ const question=bank[order[index]][0];
+ const utterance=new SpeechSynthesisUtterance(question);
+
+ utterance.lang="ru-RU";
+ utterance.rate=rate;
+ utterance.pitch=1;
+
+ const voices=window.speechSynthesis.getVoices();
+ const russian=voices.find(v=>
+   v.lang.toLowerCase().startsWith("ru")
+ );
+
+ if(russian) utterance.voice=russian;
+
+ utterance.onerror=function(){
+   status.textContent=
+   "Audio unavailable. Check Russian voice settings.";
+ };
+
+ status.textContent="Playing Russian question...";
+
+ window.speechSynthesis.cancel();
+ window.speechSynthesis.speak(utterance);
+}
+
+start(false);
+</script>
+</body>
+</html>
